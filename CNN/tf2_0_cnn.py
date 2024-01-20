@@ -420,3 +420,163 @@ plt.imshow(augmented_images[random_number])
 plt.title(f"Augmented image")
 plt.axis(False);
 
+# Create model
+# Create the model (same as model_5)
+model_6 = Sequential([
+  Conv2D(10, 3, activation='relu', input_shape=(224, 224, 3)),
+  MaxPool2D(pool_size=2), # reduce number of features by half
+  Conv2D(10, 3, activation='relu'),
+  MaxPool2D(),
+  Conv2D(10, 3, activation='relu'),
+  MaxPool2D(),
+  Flatten(),
+  Dense(1, activation='sigmoid')
+])
+
+# Compile the model
+model_6.compile(loss='binary_crossentropy',
+                optimizer=Adam(),
+                metrics=['accuracy'])
+
+# Fit the model
+history_6 = model_6.fit(train_data_augmented, # changed to augmented training data
+                        epochs=5,
+                        steps_per_epoch=len(train_data_augmented),
+                        validation_data=valid_data,
+                        validation_steps=len(valid_data))
+
+model_6.summary()
+
+plot_loss_curves(history_6)
+
+"""#### Augmented Data with Shuffle True"""
+
+print("Data Augmeneted Shuffled Dataset")
+train_data_augmented_shuffled = train_datagen_augmented.flow_from_directory(train_dir,
+                                                                   target_size = (224, 224),
+                                                                   class_mode = "binary",
+                                                                   batch_size = 32,
+                                                                   shuffle = True)
+
+print("Non Augmented Train Data")
+train_data = train_datagen.flow_from_directory(train_dir,
+                                               target_size =(224, 224),
+                                               class_mode = "binary",
+                                               batch_size= 32,
+                                               shuffle = False)
+
+print("Non Augmented Test Data")
+valid_data = test_datagen.flow_from_directory(test_dir,
+                                              target_size = (224, 224),
+                                              class_mode = "binary",
+
+                                              batch_size = 32)
+
+# Create model
+# Create the model (same as model_5)
+model_7 = Sequential([
+  Conv2D(10, 3, activation='relu', input_shape=(224, 224, 3)),
+  MaxPool2D(pool_size=2), # reduce number of features by half
+  Conv2D(10, 3, activation='relu'),
+  MaxPool2D(),
+  Conv2D(10, 3, activation='relu'),
+  MaxPool2D(),
+  Flatten(),
+  Dense(1, activation='sigmoid')
+])
+
+# Compile the model
+model_7.compile(loss='binary_crossentropy',
+                optimizer=Adam(),
+                metrics=['accuracy'])
+
+# Fit the model
+history_7 = model_7.fit(train_data_augmented, # changed to augmented training data
+                        epochs=5,
+                        steps_per_epoch=len(train_data_augmented_shuffled),
+                        validation_data=valid_data,
+                        validation_steps=len(valid_data))
+
+model_7.summary()
+
+plot_loss_curves(history_7)
+
+"""#### Making a prediction with our trained model"""
+
+# Classes we're working with
+print(class_names)
+
+# View our example image
+!wget https://raw.githubusercontent.com/mrdbourke/tensorflow-deep-learning/main/images/03-steak.jpeg
+steak = mpimg.imread("03-steak.jpeg")
+plt.imshow(steak)
+plt.axis(False);
+
+# Check the shape of our image
+steak.shape
+
+# Create a function to import an image and resize it to be able to be used with our model
+def load_and_prep_image(filename, img_shape=224):
+  """
+  Reads an image from filename, turns it into a tensor
+  and reshapes it to (img_shape, img_shape, colour_channel).
+  """
+  # Read in target file (an image)
+  img = tf.io.read_file(filename)
+
+  # Decode the read file into a tensor & ensure 3 colour channels
+  # (our model is trained on images with 3 colour channels and sometimes images have 4 colour channels)
+  img = tf.image.decode_image(img, channels=3)
+
+  # Resize the image (to the same size our model was trained on)
+  img = tf.image.resize(img, size = [img_shape, img_shape])
+
+  # Rescale the image (get all values between 0 and 1)
+  img = img/255.
+  return img
+
+# Load in and preprocess our custom image
+steak = load_and_prep_image("03-steak.jpeg")
+steak
+
+# Add an extra axis
+print(f"Shape before new dimension: {steak.shape}")
+steak = tf.expand_dims(steak, axis=0) # add an extra dimension at axis 0
+#steak = steak[tf.newaxis, ...] # alternative to the above, '...' is short for 'every other dimension'
+print(f"Shape after new dimension: {steak.shape}")
+steak
+
+# Make a prediction on custom image tensor
+pred = model_7.predict(steak)
+pred
+
+# We can index the predicted class by rounding the prediction probability
+pred_class = class_names[int(tf.round(pred)[0][0])]
+pred_class
+
+def pred_and_plot(model, filename, class_names):
+  """
+  Imports an image located at filename, makes a prediction on it with
+  a trained model and plots the image with the predicted class as the title.
+  """
+  # Import the target image and preprocess it
+  img = load_and_prep_image(filename)
+
+  # Make a prediction
+  pred = model.predict(tf.expand_dims(img, axis=0))
+
+  # Get the predicted class
+  pred_class = class_names[int(tf.round(pred)[0][0])]
+
+  # Plot the image and predicted class
+  plt.imshow(img)
+  plt.title(f"Prediction: {pred_class}")
+  plt.axis(False);
+
+# Test our model on a custom image
+pred_and_plot(model_7, "03-steak.jpeg", class_names)
+
+# Download another test image and make a prediction on it
+!wget https://raw.githubusercontent.com/mrdbourke/tensorflow-deep-learning/main/images/03-pizza-dad.jpeg
+pred_and_plot(model_7, "03-pizza-dad.jpeg", class_names)
+
