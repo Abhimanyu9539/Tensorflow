@@ -4,6 +4,7 @@
 import tensorflow as tf
 
 # Create a function to import an image and resize it to be able to be used with our model
+# Updating the files
 def load_and_prep_image(filename, img_shape=224, scale=True):
   """
   Reads in an image from filename, turns it into a tensor and reshapes into
