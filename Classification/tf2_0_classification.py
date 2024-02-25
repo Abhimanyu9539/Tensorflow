@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1BLiOtJUALPexP5I5dvZ2TghLDGxgM5Ld
 """
 
-# Import the necessary packages
+# Import the necessary packages....
 from sklearn.datasets import make_circles
 import tensorflow as tf
 import numpy as np
